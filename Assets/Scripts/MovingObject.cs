@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MovingObject : MonoBehaviour
 {
-    private Vector3 vector;
+    private Vector2 vector;
 
     public float speed;
     public float runSpeed;
@@ -17,10 +17,13 @@ public class MovingObject : MonoBehaviour
     private bool canMove = true;
 
     private Animator animator;
+    private BoxCollider2D boxCollider;
+    public LayerMask layerMask;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
+        boxCollider = GetComponent<BoxCollider2D>();
     }
 
     private IEnumerator MoveCoroutine()
@@ -38,14 +41,27 @@ public class MovingObject : MonoBehaviour
                 isRunning = false;
             }
 
-            vector.Set(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), transform.position.z);
-            if(vector.x != 0)
+            vector.Set(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (vector.x != 0)
             {
                 vector.y = 0;
             }
 
             animator.SetFloat("DirX", vector.x);
             animator.SetFloat("DirY", vector.y);
+
+            RaycastHit2D hit;
+            Vector2 start = transform.position;
+            Vector2 end = start + new Vector2(vector.x * speed * walkCount, vector.y * speed * walkCount);
+
+            boxCollider.enabled = false;
+            hit = Physics2D.Linecast(start, end, layerMask);
+            boxCollider.enabled = true;
+            if (hit.transform != null)
+            {
+                break;
+            }
+
             animator.SetBool("Walking", true);
 
             while (currentWalkCount < walkCount)
